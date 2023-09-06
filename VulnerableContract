@@ -1,0 +1,71 @@
+pragma solidity ^0.6.0;
+
+// Vulnerable Contract for Education Purposes
+contract VulnerableContract {
+    address public owner;
+    uint256 public value;
+    mapping(address => uint256) public balances;
+
+    constructor() public {
+        owner = msg.sender;
+    }
+
+    // Unprotected selfdestruct
+    function kill() public {
+        selfdestruct(msg.sender);
+    }
+
+    // Use of tx.origin for authorization
+    function transferOwnership() public {
+        if (tx.origin == owner) {
+            owner = msg.sender;
+        }
+    }
+
+    // No checks for overflows or underflows
+    function unsafeAdd(uint256 _value) public {
+        value += _value;
+    }
+
+    function unsafeSubtract(uint256 _value) public {
+        value -= _value;
+    }
+
+    // Potential reentrancy vulnerability
+    function withdrawAll() public {
+        uint256 amount = balances[msg.sender];
+        balances[msg.sender] = 0;
+        msg.sender.call{value: amount}("");
+    }
+
+    // Gas-intensive loop without an exit condition
+    function infiniteLoop() public {
+        while (true) {}
+    }
+
+    // Use of block.timestamp which can be manipulated by miners
+    function lottery() public view returns(bool) {
+        if (block.timestamp % 2 == 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    // Magic numbers without clear explanation
+    function magicNumbers() public view returns(uint256) {
+        return 42 * 365;
+    }
+
+    // Low-level calls
+    function unsafeSend(address payable _to, uint256 amount) public {
+        _to.call{value: amount}("");
+    }
+
+    // Fallback function without necessary checks
+    fallback() external payable {}
+
+    receive() external payable {
+        balances[msg.sender] += msg.value;
+    }
+}
